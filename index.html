@@ -1,11 +1,182 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>룩세렛 CDN</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>슬롯 무한 루프</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background-color: #1a1a1a;
+    font-family: 'Noto Sans KR', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .container { text-align: center; width: 100%; }
+  .top-text, .bottom-text {
+    font-weight: 500;
+    margin: 1.5rem 0;
+    transition: color 0.4s;
+  }
+  .highlight { color: #fff !important; }
+
+  .slot-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .slot-track { display: flex; will-change: transform; }
+  .slot-item {
+    font-weight: 900;
+    color: #333;
+    white-space: nowrap;
+    transition: color 0.3s, transform 0.3s, filter 0.3s;
+    transform: scale(0.85);
+    filter: blur(2px);
+    cursor: pointer;
+  }
+  .slot-item.active, .slot-item:hover {
+    color: #fff !important;
+    transform: scale(1.1);
+    filter: blur(0px);
+  }
+
+  /* ======================
+       PC 레이아웃
+  ====================== */
+  @media (min-width: 769px) {
+    .top-text, .bottom-text { font-size: 2rem; color: #888; }
+    .slot-wrapper { height: 8rem; }
+    .slot-track { gap: 3rem; }
+    .slot-item { font-size: 3rem; }
+  }
+
+  /* ======================
+       모바일 레이아웃
+  ====================== */
+  @media (max-width: 768px) {
+    .top-text, .bottom-text { font-size: 1.5rem; color: #888; }
+    .slot-wrapper { height: 5rem; }
+    .slot-track { gap: 1.5rem; }
+    .slot-item { font-size: 2rem; }
+  }
+</style>
 </head>
 <body>
-    <h1>룩세렛 CDN 페이지</h1>
+
+<div class="container">
+  <p class="top-text" id="topText">일본 진출을 위한</p>
+  <div class="slot-wrapper" id="slotWrapper">
+    <div class="slot-track" id="slotTrack"></div>
+  </div>
+  <p class="bottom-text" id="bottomText">찾고 있나요?</p>
+</div>
+
+<script>
+const keywords = [
+  "무료 인플루언서 시딩",
+  "실제 소비자 피드백",
+  "트렌드 맞춤 콘텐츠",
+  "일본어 번역·의역",
+  "무료 시장 테스트",
+  "초기 리뷰 확보",
+  "큐텐 운영",
+  "상세페이지 현지화",
+  "오프라인 진출",
+  "원스톱 물류·배송"
+];
+
+const track = document.getElementById('slotTrack');
+const topText = document.getElementById('topText');
+const bottomText = document.getElementById('bottomText');
+
+const fullList = [...keywords, ...keywords, ...keywords];
+
+fullList.forEach(text => {
+  const div = document.createElement('div');
+  div.className = 'slot-item';
+  div.innerText = text;
+  track.appendChild(div);
+});
+
+const items = document.querySelectorAll('.slot-item');
+const count = keywords.length;
+let currentIndex = count;
+let intervalId;
+let isHovering = false;
+
+// 화면에 따라 전환 간격 달리
+function getInterval() {
+  return window.innerWidth > 768 ? 2000 : 1500; // PC:2s, 모바일:1.5s
+}
+
+function moveSlot(index, useTransition = true) {
+  if (useTransition) {
+    track.style.transition = `transform 0.7s cubic-bezier(0.23, 1, 0.32, 1)`;
+  } else {
+    track.style.transition = "none";
+  }
+
+  items.forEach(item => item.classList.remove('active'));
+  items[index].classList.add('active');
+
+  const wrapper = track.parentElement;
+  const wrapperCenter = wrapper.offsetWidth / 2;
+  const itemCenter = items[index].offsetLeft + (items[index].offsetWidth / 2);
+  track.style.transform = `translateX(${wrapperCenter - itemCenter}px)`;
+
+  topText.classList.add('highlight');
+  bottomText.classList.add('highlight');
+}
+
+function updateSlot() {
+  if (isHovering) return;
+  currentIndex++;
+  moveSlot(currentIndex);
+  if (currentIndex >= count * 2) {
+    setTimeout(() => {
+      currentIndex = count;
+      moveSlot(currentIndex, false);
+    }, 700);
+  }
+}
+
+function startAutoPlay() {
+  intervalId = setInterval(updateSlot, getInterval());
+}
+
+items.forEach((item, index) => {
+  item.addEventListener('mouseenter', () => {
+    isHovering = true;
+    clearInterval(intervalId);
+    items.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const wrapperCenter = track.parentElement.offsetWidth / 2;
+    const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+    track.style.transition = "transform 0.4s ease-out";
+    track.style.transform = `translateX(${wrapperCenter - itemCenter}px)`;
+  });
+  item.addEventListener('mouseleave', () => {
+    isHovering = false;
+    currentIndex = index;
+    startAutoPlay();
+  });
+});
+
+window.addEventListener('resize', () => moveSlot(currentIndex, false));
+window.addEventListener('load', () => {
+  moveSlot(currentIndex, false);
+  setTimeout(startAutoPlay, 100);
+});
+</script>
+
 </body>
 </html>
